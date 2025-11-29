@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Portal</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="app">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="logo">EduPortal</div>
+            <div class="nav-links">
+                <button id="setupAdminBtn" class="btn-secondary" style="margin-right: 10px;">Setup Admin (Dev)</button>
+                <button id="logoutBtn" class="hidden">Logout</button>
+            </div>
+        </nav>
+
+        <!-- Auth Container -->
+        <div id="authContainer" class="container">
+            <div class="auth-box">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="login">Login</button>
+                    <button class="tab-btn" data-tab="signup">Sign Up</button>
+                </div>
+
+                <!-- Login Form -->
+                <form id="loginForm" class="auth-form active">
+                    <h2>Welcome Back</h2>
+                    <div class="input-group">
+                        <label for="loginEmail">Email</label>
+                        <input type="email" id="loginEmail" required placeholder="Enter your email">
+                    </div>
+                    <div class="input-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" required placeholder="Enter your password">
+                    </div>
+                    <button type="submit" class="btn-primary">Login</button>
+                    <p id="loginError" class="error-msg"></p>
+                </form>
+
+                <!-- Signup Form -->
+                <form id="signupForm" class="auth-form">
+                    <h2>Create Account</h2>
+                    <div class="input-group">
+                        <label for="signupEmail">Email</label>
+                        <input type="email" id="signupEmail" required placeholder="Enter your email">
+                    </div>
+                    <div class="input-group">
+                        <label for="signupPassword">Password</label>
+                        <input type="password" id="signupPassword" required placeholder="Choose a password">
+                    </div>
+                    <button type="submit" class="btn-primary">Sign Up</button>
+                    <p id="signupError" class="error-msg"></p>
+                </form>
+            </div>
+        </div>
+
+        <!-- Pending Approval Screen -->
+        <div id="pendingScreen" class="container hidden">
+            <div class="status-box">
+                <div class="icon">⏳</div>
+                <h2>Account Pending Approval</h2>
+                <p>Your account has been created but requires administrator approval before you can access the learning
+                    content.</p>
+                <p>Please check back later.</p>
+            </div>
+        </div>
+
+        <!-- User Dashboard -->
+        <div id="userDashboard" class="dashboard hidden">
+            <header class="dashboard-header">
+                <h1>My Learning</h1>
+                <p>Welcome to your learning dashboard.</p>
+            </header>
+            <div class="content-grid">
+                <div class="card">
+                    <h3>Module 1: Introduction</h3>
+                    <p>Start your journey here.</p>
+                    <button class="btn-secondary">Start</button>
+                </div>
+                <div class="card">
+                    <h3>Module 2: Advanced Concepts</h3>
+                    <p>Deep dive into the material.</p>
+                    <button class="btn-secondary">Start</button>
+                </div>
+                <div class="card">
+                    <h3>Module 3: Final Project</h3>
+                    <p>Apply what you've learned.</p>
+                    <button class="btn-secondary">Start</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="adminDashboard" class="dashboard hidden">
+            <header class="dashboard-header">
+                <h1>Admin Dashboard</h1>
+                <p>Manage user approvals.</p>
+            </header>
+            <div class="admin-panel">
+                <h3>Pending Approvals</h3>
+                <div id="userList" class="user-list">
+                    <!-- User items will be injected here -->
+                    <p class="empty-state">No pending approvals.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+
+</html>

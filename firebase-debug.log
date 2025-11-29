@@ -1,0 +1,76 @@
+[debug] [2025-11-29T13:25:20.510Z] ----------------------------------------------------------------------
+[debug] [2025-11-29T13:25:20.513Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\mandu\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js init
+[debug] [2025-11-29T13:25:20.514Z] CLI Version:   14.26.0
+[debug] [2025-11-29T13:25:20.514Z] Platform:      win32
+[debug] [2025-11-29T13:25:20.514Z] Node Version:  v22.15.0
+[debug] [2025-11-29T13:25:20.515Z] Time:          Sat Nov 29 2025 18:55:20 GMT+0530 (India Standard Time)
+[debug] [2025-11-29T13:25:20.515Z] ----------------------------------------------------------------------
+[debug] 
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  D:\CMR_COLLEGE\7th SEM\BEFA\sem exam\firebase
+
+Before we get started, keep in mind:
+
+  * You are initializing within an existing Firebase project directory
+
+[info] 
+=== Project Setup
+[info] 
+[info] First, let's associate this project directory with a Firebase project.
+[info] You can create multiple project aliases by running firebase use --add, 
+[info] 
+[debug] [2025-11-29T13:25:28.287Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-11-29T13:25:28.288Z] > authorizing via signed-in user (shashiprojectsandsolutions@gmail.com)
+[debug] [2025-11-29T13:25:28.290Z] Checked if tokens are valid: false, expires at: 1764326846938
+[debug] [2025-11-29T13:25:28.291Z] Checked if tokens are valid: false, expires at: 1764326846938
+[debug] [2025-11-29T13:25:28.291Z] > refreshing access token with scopes: []
+[debug] [2025-11-29T13:25:28.294Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-11-29T13:25:28.295Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-11-29T13:25:28.541Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-11-29T13:25:28.541Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-11-29T13:25:28.551Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/studio-5445731880-d36cd [none]
+[debug] [2025-11-29T13:25:29.372Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/studio-5445731880-d36cd 403
+[debug] [2025-11-29T13:25:29.372Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/studio-5445731880-d36cd {"error":{"code":403,"message":"The caller does not have permission","status":"PERMISSION_DENIED"}}
+[debug] [2025-11-29T13:25:29.374Z] Request to https://firebase.googleapis.com/v1beta1/projects/studio-5445731880-d36cd had HTTP Error: 403, The caller does not have permission
+[debug] [2025-11-29T13:25:29.504Z] FirebaseError: Request to https://firebase.googleapis.com/v1beta1/projects/studio-5445731880-d36cd had HTTP Error: 403, The caller does not have permission
+    at responseToError (C:\Users\mandu\AppData\Roaming\npm\node_modules\firebase-tools\lib\responseToError.js:53:12)
+    at RetryOperation._fn (C:\Users\mandu\AppData\Roaming\npm\node_modules\firebase-tools\lib\apiv2.js:322:77)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[error] 
+[error] Error: Failed to get Firebase project studio-5445731880-d36cd. Please make sure the project exists and your account has permission to access it.
+[debug] [2025-11-29T13:25:53.896Z] ----------------------------------------------------------------------
+[debug] [2025-11-29T13:25:53.899Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\mandu\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js use --add
+[debug] [2025-11-29T13:25:53.899Z] CLI Version:   14.26.0
+[debug] [2025-11-29T13:25:53.899Z] Platform:      win32
+[debug] [2025-11-29T13:25:53.900Z] Node Version:  v22.15.0
+[debug] [2025-11-29T13:25:53.900Z] Time:          Sat Nov 29 2025 18:55:53 GMT+0530 (India Standard Time)
+[debug] [2025-11-29T13:25:53.900Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-11-29T13:25:54.152Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-11-29T13:25:54.153Z] > authorizing via signed-in user (shashiprojectsandsolutions@gmail.com)
+[debug] [2025-11-29T13:25:54.154Z] Checked if tokens are valid: true, expires at: 1764426327541
+[debug] [2025-11-29T13:25:54.154Z] Checked if tokens are valid: true, expires at: 1764426327541
+[debug] [2025-11-29T13:25:54.156Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects pageSize=1000
+[debug] [2025-11-29T13:25:55.295Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects 200
+[debug] [2025-11-29T13:25:55.295Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects [omitted]
+[debug] [2025-11-29T13:26:07.365Z] ExitPromptError: User force closed the prompt with SIGINT
+    at Interface.sigint (C:\Users\mandu\AppData\Roaming\npm\node_modules\firebase-tools\node_modules\@inquirer\core\dist\commonjs\lib\create-prompt.js:101:37)
+    at Interface.emit (node:events:518:28)
+    at Interface.emit (node:domain:489:12)
+    at [_ttyWrite] [as _ttyWrite] (node:internal/readline/interface:1128:18)
+    at ReadStream.onkeypress (node:internal/readline/interface:267:20)
+    at ReadStream.emit (node:events:530:35)
+    at ReadStream.emit (node:domain:489:12)
+    at emitKeys (node:internal/readline/utils:370:14)
+    at emitKeys.next (<anonymous>)
+    at ReadStream.onData (node:internal/readline/emitKeypressEvents:64:36)
+[error] 
+[error] Error: An unexpected error has occurred.
