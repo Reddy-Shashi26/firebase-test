@@ -10,6 +10,18 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Portal</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
 
 <body>
     <div id="app">
@@ -17,7 +29,9 @@
         <nav class="navbar">
             <div class="logo">EduPortal</div>
             <div class="nav-links">
-                <button id="setupAdminBtn" class="btn-secondary" style="margin-right: 10px;">Setup Admin (Dev)</button>
+                <!-- Setup Admin button hidden by default, can be enabled via console if needed -->
+                <button id="setupAdminBtn" class="btn-secondary hidden" style="margin-right: 10px;">Setup Admin
+                    (Dev)</button>
                 <button id="logoutBtn" class="hidden">Logout</button>
             </div>
         </nav>
@@ -28,6 +42,7 @@
                 <div class="tabs">
                     <button class="tab-btn active" data-tab="login">Login</button>
                     <button class="tab-btn" data-tab="signup">Sign Up</button>
+                    <button class="tab-btn" data-tab="phone">Phone</button>
                 </div>
 
                 <!-- Login Form -->
@@ -59,6 +74,26 @@
                     <button type="submit" class="btn-primary">Sign Up</button>
                     <p id="signupError" class="error-msg"></p>
                 </form>
+
+                <!-- Phone Login Form -->
+                <form id="phoneForm" class="auth-form">
+                    <h2>Phone Login</h2>
+                    <div class="input-group">
+                        <label for="phoneNumber">Phone Number</label>
+                        <input type="tel" id="phoneNumber" placeholder="+1 555 555 5555">
+                    </div>
+                    <div id="recaptcha-container"></div>
+                    <button type="button" id="sendOtpBtn" class="btn-primary">Send OTP</button>
+
+                    <div id="otpContainer" class="hidden" style="margin-top: 1rem;">
+                        <div class="input-group">
+                            <label for="otpInput">Enter OTP</label>
+                            <input type="text" id="otpInput" placeholder="123456">
+                        </div>
+                        <button type="button" id="verifyOtpBtn" class="btn-primary">Verify OTP</button>
+                    </div>
+                    <p id="phoneError" class="error-msg"></p>
+                </form>
             </div>
         </div>
 
@@ -78,7 +113,20 @@
             <header class="dashboard-header">
                 <h1>My Learning</h1>
                 <p>Welcome to your learning dashboard.</p>
+                <button id="editProfileBtn" class="btn-secondary">Edit Profile</button>
             </header>
+
+            <!-- Profile Section (Hidden by default) -->
+            <div id="profileSection" class="card hidden" style="margin-bottom: 2rem;">
+                <h3>My Profile</h3>
+                <form id="profileForm">
+                    <div id="dynamicProfileFields">
+                        <!-- Dynamic fields injected here -->
+                    </div>
+                    <button type="submit" class="btn-primary" style="margin-top: 1rem;">Save Profile</button>
+                </form>
+            </div>
+
             <div class="content-grid">
                 <div class="card">
                     <h3>Module 1: Introduction</h3>
@@ -102,13 +150,47 @@
         <div id="adminDashboard" class="dashboard hidden">
             <header class="dashboard-header">
                 <h1>Admin Dashboard</h1>
-                <p>Manage user approvals.</p>
+                <p>Manage user approvals and system configuration.</p>
             </header>
+
+            <div class="admin-panel" style="margin-bottom: 2rem;">
+                <h3>Manage Profile Fields</h3>
+                <div class="input-group" style="display: flex; gap: 10px; align-items: flex-end;">
+                    <div style="flex: 1;">
+                        <label>Field Name</label>
+                        <input type="text" id="newFieldName" placeholder="e.g. Branch">
+                    </div>
+                    <button id="addFieldBtn" class="btn-primary" style="width: auto;">Add Field</button>
+                </div>
+                <div id="fieldsList" class="fields-list">
+                    <!-- Existing fields listed here -->
+                </div>
+            </div>
+
             <div class="admin-panel">
                 <h3>Pending Approvals</h3>
                 <div id="userList" class="user-list">
                     <!-- User items will be injected here -->
                     <p class="empty-state">No pending approvals.</p>
+                </div>
+            </div>
+
+            <div class="admin-panel" style="margin-top: 2rem;">
+                <h3>All Users</h3>
+                <div style="overflow-x: auto;">
+                    <table id="allUsersTable" style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr id="userTableHead">
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <!-- Dynamic headers -->
+                            </tr>
+                        </thead>
+                        <tbody id="userTableBody">
+                            <!-- User rows -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
 // Firebase Configuration
@@ -25,12 +25,66 @@ const adminDashboard = document.getElementById('adminDashboard');
 const logoutBtn = document.getElementById('logoutBtn');
 const loginForm = document.getElementById('loginForm');
 const signupForm = document.getElementById('signupForm');
+const phoneForm = document.getElementById('phoneForm');
 const tabBtns = document.querySelectorAll('.tab-btn');
 const userList = document.getElementById('userList');
+
+// Admin & Profile Elements
+const setupAdminBtn = document.getElementById('setupAdminBtn');
+const newFieldNameInput = document.getElementById('newFieldName');
+const addFieldBtn = document.getElementById('addFieldBtn');
+const fieldsList = document.getElementById('fieldsList');
+const allUsersTable = document.getElementById('allUsersTable');
+const userTableHead = document.getElementById('userTableHead');
+const userTableBody = document.getElementById('userTableBody');
+const editProfileBtn = document.getElementById('editProfileBtn');
+const profileSection = document.getElementById('profileSection');
+const profileForm = document.getElementById('profileForm');
+const dynamicProfileFields = document.getElementById('dynamicProfileFields');
+
+// Phone Auth Elements
+const sendOtpBtn = document.getElementById('sendOtpBtn');
+const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+const otpContainer = document.getElementById('otpContainer');
+const phoneNumberInput = document.getElementById('phoneNumber');
+const otpInput = document.getElementById('otpInput');
+const phoneError = document.getElementById('phoneError');
 
 // State
 let currentUser = null;
 let userDoc = null;
+let confirmationResult = null;
+let dynamicFields = [];
+
+// Phone Auth Logic
+function initRecaptcha() {
+    if (window.recaptchaVerifier) {
+        try {
+            window.recaptchaVerifier.clear();
+        } catch (e) {
+            console.warn("Could not clear recaptcha", e);
+        }
+    }
+
+    try {
+        console.log("Initializing Recaptcha...");
+        const container = document.getElementById('recaptcha-container');
+        window.recaptchaVerifier = new RecaptchaVerifier(container, {
+            'size': 'normal',
+            'callback': (response) => {
+                console.log("Recaptcha solved");
+            },
+            'expired-callback': () => {
+                console.log("Recaptcha expired");
+            }
+        });
+        window.recaptchaVerifier.render().then((widgetId) => {
+            console.log("Recaptcha rendered, widgetId:", widgetId);
+        });
+    } catch (e) {
+        console.error("Error initializing Recaptcha:", e);
+    }
+}
 
 // Tab Switching
 tabBtns.forEach(btn => {
@@ -38,12 +92,17 @@ tabBtns.forEach(btn => {
         tabBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         const tab = btn.dataset.tab;
-        if (tab === 'login') {
-            loginForm.classList.add('active');
-            signupForm.classList.remove('active');
-        } else {
-            loginForm.classList.remove('active');
-            signupForm.classList.add('active');
+
+        loginForm.classList.remove('active');
+        signupForm.classList.remove('active');
+        phoneForm.classList.remove('active');
+
+        if (tab === 'login') loginForm.classList.add('active');
+        else if (tab === 'signup') signupForm.classList.add('active');
+        else if (tab === 'phone') {
+            phoneForm.classList.add('active');
+            // Initialize Recaptcha when tab is shown
+            setTimeout(initRecaptcha, 100); // Small delay to ensure DOM is updated
         }
     });
 });
@@ -95,6 +154,101 @@ loginForm.addEventListener('submit', async (e) => {
     }
 });
 
+sendOtpBtn.addEventListener('click', async () => {
+    console.log("Send OTP clicked");
+    const phoneNumber = phoneNumberInput.value;
+    phoneError.textContent = '';
+
+    if (!phoneNumber) {
+        phoneError.textContent = 'Please enter a phone number.';
+        return;
+    }
+
+    // Basic format check
+    if (!phoneNumber.startsWith('+')) {
+        phoneError.textContent = 'Phone number must start with + (e.g., +15555555555)';
+        return;
+    }
+
+    try {
+        sendOtpBtn.disabled = true;
+        sendOtpBtn.textContent = "Sending...";
+
+        if (!window.recaptchaVerifier) {
+            console.log("Recaptcha not initialized, initializing now...");
+            initRecaptcha();
+        }
+
+        const appVerifier = window.recaptchaVerifier;
+        console.log("Signing in with phone number:", phoneNumber);
+
+        confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+        console.log("SMS sent");
+
+        // SMS sent. Prompt user to type the code from the message.
+        otpContainer.classList.remove('hidden');
+        sendOtpBtn.classList.add('hidden');
+        alert('OTP Sent! Please check your phone.');
+
+    } catch (error) {
+        console.error("Error sending OTP:", error);
+        phoneError.textContent = "Error: " + error.message;
+        sendOtpBtn.disabled = false;
+        sendOtpBtn.textContent = "Send OTP";
+
+        // Reset reCAPTCHA so user can try again
+        if (window.recaptchaVerifier) {
+            try {
+                window.recaptchaVerifier.render().then(function (widgetId) {
+                    grecaptcha.reset(widgetId);
+                });
+            } catch (e) {
+                console.error("Error resetting recaptcha", e);
+            }
+        }
+    }
+});
+
+verifyOtpBtn.addEventListener('click', async () => {
+    const code = otpInput.value;
+    phoneError.textContent = '';
+
+    if (!code) {
+        phoneError.textContent = 'Please enter the OTP.';
+        return;
+    }
+
+    try {
+        const result = await confirmationResult.confirm(code);
+        const user = result.user;
+
+        // Check if user exists in Firestore, if not create them
+        const docRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(docRef);
+
+        if (!docSnap.exists()) {
+            await setDoc(doc(db, "users", user.uid), {
+                email: user.phoneNumber, // Use phone number as email/identifier
+                role: 'user',
+                status: 'pending',
+                createdAt: new Date().toISOString()
+            });
+
+            // Sign out immediately as they are pending
+            await signOut(auth);
+            alert('Account created! Please wait for admin approval.');
+            window.location.reload();
+        } else {
+            // User exists, let onAuthStateChanged handle it
+        }
+
+    } catch (error) {
+        console.error(error);
+        phoneError.textContent = 'Invalid OTP or error verifying.';
+    }
+});
+
+
 // Logout
 logoutBtn.addEventListener('click', async () => {
     await signOut(auth);
@@ -111,11 +265,20 @@ onAuthStateChanged(auth, async (user) => {
 
         if (docSnap.exists()) {
             userDoc = docSnap.data();
+            await loadDynamicFields(); // Load fields config
             handleUserRouting(userDoc);
         } else {
-            // Handle case where user exists in Auth but not Firestore (shouldn't happen normally)
-            console.error("No such document!");
+            // Handle case where user exists in Auth but not Firestore
+            console.log("User logged in but no Firestore doc found. Creating one now...");
+            await setDoc(doc(db, "users", user.uid), {
+                email: user.email || user.phoneNumber,
+                role: 'user',
+                status: 'pending',
+                createdAt: new Date().toISOString()
+            });
             await signOut(auth);
+            alert('Account created! Please wait for admin approval.');
+            window.location.reload();
         }
     } else {
         // No user is signed in
@@ -129,14 +292,14 @@ function handleUserRouting(userData) {
 
     if (userData.role === 'admin') {
         showAdminDashboard();
+        // Show setup button only for admin
+        setupAdminBtn.classList.remove('hidden');
     } else {
+        setupAdminBtn.classList.add('hidden');
         if (userData.status === 'approved') {
             showUserDashboard();
         } else {
             showPendingScreen();
-            // Optional: Auto logout after showing message? 
-            // For now, we keep them logged in but on pending screen, or we can logout.
-            // Let's keep them on pending screen but remove navigation.
         }
     }
 }
@@ -160,12 +323,184 @@ function showPendingScreen() {
 
 function showUserDashboard() {
     userDashboard.classList.remove('hidden');
+    renderProfileForm();
+    checkMissingFields();
 }
 
 async function showAdminDashboard() {
     adminDashboard.classList.remove('hidden');
     loadPendingUsers();
+    renderFieldsList();
+    loadAllUsers();
 }
+
+// --- Dynamic Fields Logic ---
+
+async function loadDynamicFields() {
+    const docRef = doc(db, "config", "profileFields");
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+        dynamicFields = docSnap.data().fields || [];
+    } else {
+        dynamicFields = [];
+    }
+}
+
+// Admin: Add Field
+addFieldBtn.addEventListener('click', async () => {
+    const fieldName = newFieldNameInput.value.trim();
+    if (!fieldName) return;
+
+    // Check duplicate
+    if (dynamicFields.some(f => f.name === fieldName)) {
+        alert('Field already exists!');
+        return;
+    }
+
+    dynamicFields.push({ name: fieldName, type: 'text' });
+
+    await setDoc(doc(db, "config", "profileFields"), {
+        fields: dynamicFields
+    });
+
+    newFieldNameInput.value = '';
+    renderFieldsList();
+    loadAllUsers(); // Refresh table to show new column
+});
+
+// Admin: Render Fields List
+function renderFieldsList() {
+    fieldsList.innerHTML = '';
+    dynamicFields.forEach((field, index) => {
+        const div = document.createElement('div');
+        div.className = 'field-item';
+        div.innerHTML = `
+            <span>${field.name}</span>
+            <button class="btn-sm btn-danger" onclick="deleteField(${index})">Delete</button>
+        `;
+        fieldsList.appendChild(div);
+    });
+}
+
+// Admin: Delete Field
+window.deleteField = async (index) => {
+    if (!confirm('Are you sure? This will hide the field from profiles.')) return;
+    dynamicFields.splice(index, 1);
+    await setDoc(doc(db, "config", "profileFields"), {
+        fields: dynamicFields
+    });
+    renderFieldsList();
+    loadAllUsers();
+};
+
+// Admin: Load All Users with Dynamic Columns
+async function loadAllUsers() {
+    userTableBody.innerHTML = '<tr><td colspan="100%">Loading...</td></tr>';
+
+    const q = query(collection(db, "users"));
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+        userTableBody.innerHTML = '<tr><td colspan="100%">No users found.</td></tr>';
+        return;
+    }
+
+    // 1. Collect all unique keys from all users
+    const allKeys = new Set();
+    const users = [];
+
+    querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        users.push(data);
+        Object.keys(data).forEach(key => allKeys.add(key));
+    });
+
+    // 2. Filter out standard keys to identify "extra" fields
+    const standardKeys = ['email', 'role', 'status', 'createdAt', 'uid'];
+    const extraKeys = Array.from(allKeys).filter(key => !standardKeys.includes(key));
+
+    // 3. Update Header
+    userTableHead.innerHTML = `
+        <th>Email</th>
+        <th>Role</th>
+        <th>Status</th>
+        <th>Created At</th>
+        ${extraKeys.map(key => `<th>${key}</th>`).join('')}
+    `;
+
+    // 4. Render Rows
+    userTableBody.innerHTML = '';
+    users.forEach(user => {
+        const tr = document.createElement('tr');
+
+        // Format date
+        const dateStr = user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-';
+
+        // Generate cells for extra keys
+        const extraCells = extraKeys.map(key => `<td>${user[key] || '-'}</td>`).join('');
+
+        tr.innerHTML = `
+            <td>${user.email || '-'}</td>
+            <td>${user.role || '-'}</td>
+            <td>${user.status || '-'}</td>
+            <td>${dateStr}</td>
+            ${extraCells}
+        `;
+        userTableBody.appendChild(tr);
+    });
+}
+
+// User: Render Profile Form
+function renderProfileForm() {
+    dynamicProfileFields.innerHTML = '';
+    dynamicFields.forEach(field => {
+        const div = document.createElement('div');
+        div.className = 'input-group';
+        div.innerHTML = `
+            <label>${field.name}</label>
+            <input type="text" name="${field.name}" value="${userDoc[field.name] || ''}" placeholder="Enter ${field.name}">
+        `;
+        dynamicProfileFields.appendChild(div);
+    });
+}
+
+// User: Toggle Profile Section
+editProfileBtn.addEventListener('click', () => {
+    profileSection.classList.toggle('hidden');
+});
+
+// User: Save Profile
+profileForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(profileForm);
+    const updates = {};
+
+    dynamicFields.forEach(field => {
+        updates[field.name] = formData.get(field.name);
+    });
+
+    try {
+        await updateDoc(doc(db, "users", currentUser.uid), updates);
+        userDoc = { ...userDoc, ...updates }; // Update local state
+        alert('Profile updated!');
+        profileSection.classList.add('hidden');
+    } catch (error) {
+        console.error("Error updating profile:", error);
+        alert('Error updating profile.');
+    }
+});
+
+// User: Check Missing Fields
+function checkMissingFields() {
+    const missing = dynamicFields.filter(f => !userDoc[f.name]);
+    if (missing.length > 0) {
+        // Show notification or auto-open profile
+        profileSection.classList.remove('hidden');
+        // Optional: Alert user
+        // alert(`Please complete your profile. Missing: ${missing.map(f => f.name).join(', ')}`);
+    }
+}
+
 
 // Admin Logic
 async function loadPendingUsers() {
@@ -197,7 +532,6 @@ async function loadPendingUsers() {
 }
 
 // Setup Admin (Dev Tool)
-const setupAdminBtn = document.getElementById('setupAdminBtn');
 setupAdminBtn.addEventListener('click', async () => {
     const email = prompt("Enter email for Admin:", "admin@test.com");
     if (!email) return;
