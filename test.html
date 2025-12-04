@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebView Connection Test</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; text-align: center; }
+        .status-box { 
+            padding: 15px; 
+            border: 2px solid #333; 
+            margin-top: 20px; 
+            background-color: #f0f0f0;
+            word-wrap: break-word; /* Ensure long IDs don't break layout */
+        }
+        .success { border-color: green; color: green; }
+        .error { border-color: red; color: red; }
+    </style>
+</head>
+<body>
+
+    <h2>Kodular Connection Test</h2>
+    <p>Checking for OneSignal ID...</p>
+
+    <div id="result-box" class="status-box">
+        Waiting for data...
+    </div>
+
+    <button onclick="checkWebViewString()">Manually Check Again</button>
+
+    <script>
+        function checkWebViewString() {
+            var display = document.getElementById("result-box");
+
+            // 1. Check if the Kodular interface exists
+            if (window.AppInventor && window.AppInventor.getWebViewString) {
+                
+                // 2. Get the string
+                var receivedData = window.AppInventor.getWebViewString();
+
+                if (receivedData && receivedData.length > 0) {
+                    display.innerHTML = "<strong>SUCCESS!</strong><br>Received ID:<br>" + receivedData;
+                    display.className = "status-box success";
+                } else {
+                    display.innerHTML = "<strong>CONNECTED BUT EMPTY</strong><br>Kodular is connected, but WebViewString is empty.";
+                    display.className = "status-box error";
+                }
+
+            } else {
+                // 3. Interface not found (likely opened in Chrome, not the App)
+                display.innerHTML = "<strong>FAILED</strong><br>AppInventor interface not found.<br>(Are you viewing this inside the App?)";
+                display.className = "status-box error";
+            }
+        }
+
+        // Run the check immediately when page loads
+        window.onload = checkWebViewString;
+    </script>
+
+</body>
+</html>
