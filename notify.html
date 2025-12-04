@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Push Admin</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; padding: 20px; color: #333; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2 { border-bottom: 2px solid #e5e5e5; padding-bottom: 10px; margin-bottom: 20px; }
+        h3 { margin-top: 30px; color: #444; font-size: 18px; border-left: 4px solid #e54b4d; padding-left: 10px; }
+        
+        .row { display: flex; gap: 15px; margin-bottom: 15px; }
+        .col { flex: 1; }
+        
+        label { font-weight: 600; font-size: 13px; color: #666; display: block; margin-bottom: 5px; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        input:focus, textarea:focus { border-color: #e54b4d; outline: none; }
+        
+        .hint { font-size: 11px; color: #888; margin-top: 2px; }
+        
+        /* Dynamic Lists (Data & Buttons) */
+        .dynamic-list { background: #f9f9f9; padding: 15px; border-radius: 6px; border: 1px dashed #ccc; }
+        .dynamic-item { display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-end; }
+        .btn-small { padding: 5px 10px; font-size: 12px; cursor: pointer; background: #ddd; border: none; border-radius: 4px; }
+        .btn-remove { background: #ffcccc; color: #cc0000; }
+        
+        /* Main Button */
+        .btn-send { background-color: #e54b4d; color: white; padding: 15px; width: 100%; border: none; border-radius: 6px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 30px; transition: 0.2s; }
+        .btn-send:hover { background-color: #c73e40; }
+        
+        /* Status */
+        #status-box { margin-top: 20px; padding: 15px; border-radius: 6px; display: none; text-align: center; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🚀 Advanced Push Creator</h2>
+
+    <h3>1. Audience</h3>
+    <div class="row">
+        <div class="col">
+            <label>Send To</label>
+            <select id="audience_type" onchange="toggleAudience()">
+                <option value="all">Send to Total Subscriptions</option>
+                <option value="segment">Send to Specific Segment</option>
+                <option value="id">Send to Specific Player IDs</option>
+            </select>
+        </div>
+        <div class="col" id="segment_input_div" style="display:none;">
+            <label>Segment Name</label>
+            <input type="text" id="segment_name" value="Active Users">
+        </div>
+        <div class="col" id="player_id_div" style="display:none;">
+            <label>Player IDs (Comma separated)</label>
+            <input type="text" id="specific_ids" placeholder="id1, id2, id3...">
+        </div>
+    </div>
+
+    <h3>2. Message</h3>
+    <label>Title</label>
+    <input type="text" id="title" placeholder="Notification Title">
+    
+    <label>Message Body</label>
+    <textarea id="message" rows="3" placeholder="Enter your message..."></textarea>
+    
+    <label>Launch URL (Optional)</label>
+    <input type="text" id="launch_url" placeholder="https://...">
+
+    <h3>3. Images & Android Visuals</h3>
+    <div class="row">
+        <div class="col">
+            <label>Big Picture (URL)</label>
+            <input type="text" id="big_picture" placeholder="https://... (Image shown in notification body)">
+        </div>
+        <div class="col">
+            <label>Large Icon (URL)</label>
+            <input type="text" id="large_icon" placeholder="https://... (Icon on the right)">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <label>Small Icon Resource</label>
+            <input type="text" id="small_icon" placeholder="ic_stat_onesignal_default">
+            <div class="hint">Use a drawable resource name from your App</div>
+        </div>
+        <div class="col">
+            <label>Accent Color (Hex)</label>
+            <input type="color" id="accent_color" value="#FF0000" style="height:40px;">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <label>LED Color (Hex)</label>
+            <input type="color" id="led_color" value="#0000FF" style="height:40px;">
+        </div>
+        <div class="col">
+            <label>Lockscreen Visibility</label>
+            <select id="visibility">
+                <option value="1">Public (Show message)</option>
+                <option value="0">Private (Show 'New Message')</option>
+                <option value="-1">Secret (Do not show)</option>
+            </select>
+        </div>
+    </div>
+
+    <h3>4. Action Buttons</h3>
+    <div class="dynamic-list" id="buttons-container">
+        </div>
+    <button class="btn-small" onclick="addButtonRow()">+ Add Action Button</button>
+
+    <h3>5. Additional Data (Key-Value)</h3>
+    <div class="dynamic-list" id="data-container">
+        </div>
+    <button class="btn-small" onclick="addDataRow()">+ Add Data Field</button>
+
+    <h3>6. Settings & Schedule</h3>
+    <div class="row">
+        <div class="col">
+            <label>Priority</label>
+            <select id="priority">
+                <option value="10">High (Immediate)</option>
+                <option value="5">Normal (Battery saving)</option>
+            </select>
+        </div>
+        <div class="col">
+            <label>Collapse ID</label>
+            <input type="text" id="collapse_id" placeholder="e.g., 'updates'">
+            <div class="hint">Replaces older notifications with same ID</div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <label>Schedule Delivery</label>
+            <select id="send_time_type" onchange="toggleSchedule()">
+                <option value="now">Immediately</option>
+                <option value="later">Specific Time</option>
+            </select>
+        </div>
+        <div class="col" id="schedule_input_div" style="display:none;">
+            <label>Select Date/Time</label>
+            <input type="datetime-local" id="send_after">
+        </div>
+    </div>
+
+    <button class="btn-send" onclick="sendPush()">SEND NOTIFICATION 🚀</button>
+    <div id="status-box"></div>
+
+</div>
+
+<script>
+    // --------------------------------------------------------
+    // YOUR CONFIGURATION (KEEP SECURE)
+    // --------------------------------------------------------
+    const APP_ID = "45d694ad-0509-4201-87f6-9d807bad7c8e";
+    const API_KEY = "os_v2_app_ixljjlifbfbadb7wtwahxll4rzoxz32qanhutonvdhtr7otju2jnqn3al6zgskzaenncmf63l3egw45vhkfbsbch5bpkynwihve3twy";
+    // --------------------------------------------------------
+
+    // --- UI Toggles ---
+    function toggleAudience() {
+        const type = document.getElementById('audience_type').value;
+        document.getElementById('segment_input_div').style.display = (type === 'segment') ? 'block' : 'none';
+        document.getElementById('player_id_div').style.display = (type === 'id') ? 'block' : 'none';
+    }
+
+    function toggleSchedule() {
+        const type = document.getElementById('send_time_type').value;
+        document.getElementById('schedule_input_div').style.display = (type === 'later') ? 'block' : 'none';
+    }
+
+    // --- Dynamic Rows (Buttons & Data) ---
+    function addDataRow() {
+        const div = document.createElement('div');
+        div.className = 'dynamic-item';
+        div.innerHTML = `
+            <input type="text" placeholder="Key" class="data-key">
+            <input type="text" placeholder="Value" class="data-val">
+            <button class="btn-small btn-remove" onclick="this.parentElement.remove()">X</button>
+        `;
+        document.getElementById('data-container').appendChild(div);
+    }
+
+    function addButtonRow() {
+        const div = document.createElement('div');
+        div.className = 'dynamic-item';
+        div.innerHTML = `
+            <input type="text" placeholder="ID (e.g. id1)" class="btn-id" style="flex:1">
+            <input type="text" placeholder="Label (e.g. Open)" class="btn-text" style="flex:2">
+            <input type="text" placeholder="Icon (e.g. ic_menu_send)" class="btn-icon" style="flex:1">
+            <button class="btn-small btn-remove" onclick="this.parentElement.remove()">X</button>
+        `;
+        document.getElementById('buttons-container').appendChild(div);
+    }
+
+    // --- MAIN SEND FUNCTION ---
+    function sendPush() {
+        const statusBox = document.getElementById('status-box');
+        statusBox.style.display = 'block';
+        statusBox.className = '';
+        statusBox.innerText = 'Preparing Payload...';
+
+        // 1. Basic Content
+        const title = document.getElementById('title').value;
+        const message = document.getElementById('message').value;
+        if(!message) { alert("Message is required!"); return; }
+
+        const payload = {
+            app_id: APP_ID,
+            headings: { "en": title || "Message" },
+            contents: { "en": message }
+        };
+
+        // 2. Audience
+        const audType = document.getElementById('audience_type').value;
+        if (audType === 'all') {
+            payload.included_segments = ["All"];
+        } else if (audType === 'segment') {
+            payload.included_segments = [document.getElementById('segment_name').value];
+        } else {
+            const ids = document.getElementById('specific_ids').value;
+            payload.include_player_ids = ids.split(',').map(s => s.trim());
+        }
+
+        // 3. URLs & Images
+        const launchUrl = document.getElementById('launch_url').value;
+        if(launchUrl) payload.url = launchUrl;
+
+        const bigPic = document.getElementById('big_picture').value;
+        if(bigPic) payload.big_picture = bigPic;
+
+        const largeIcon = document.getElementById('large_icon').value;
+        if(largeIcon) payload.large_icon = largeIcon;
+        
+        const smallIcon = document.getElementById('small_icon').value;
+        if(smallIcon) payload.small_icon = smallIcon;
+
+        // 4. Android Visuals
+        payload.android_accent_color = document.getElementById('accent_color').value.replace('#', 'FF'); // ARGB format
+        payload.android_led_color = document.getElementById('led_color').value.replace('#', 'FF');
+        payload.android_visibility = parseInt(document.getElementById('visibility').value);
+        payload.priority = parseInt(document.getElementById('priority').value);
+        
+        const collapseId = document.getElementById('collapse_id').value;
+        if(collapseId) payload.collapse_id = collapseId;
+
+        // 5. Additional Data
+        const dataItems = document.querySelectorAll('#data-container .dynamic-item');
+        let dataObj = {};
+        dataItems.forEach(item => {
+            const key = item.querySelector('.data-key').value;
+            const val = item.querySelector('.data-val').value;
+            if(key) dataObj[key] = val;
+        });
+        if(Object.keys(dataObj).length > 0) payload.data = dataObj;
+
+        // 6. Buttons
+        const btnItems = document.querySelectorAll('#buttons-container .dynamic-item');
+        let btnsArr = [];
+        btnItems.forEach(item => {
+            const id = item.querySelector('.btn-id').value;
+            const text = item.querySelector('.btn-text').value;
+            const icon = item.querySelector('.btn-icon').value;
+            if(id && text) btnsArr.push({id: id, text: text, icon: icon || ""});
+        });
+        if(btnsArr.length > 0) payload.buttons = btnsArr;
+
+        // 7. Scheduling
+        if (document.getElementById('send_time_type').value === 'later') {
+            const dateVal = document.getElementById('send_after').value;
+            if (dateVal) {
+                // Convert to format: "2015-09-24 14:00:00 GMT-0700"
+                // Simple ISO string usually works for OneSignal API
+                const dateObj = new Date(dateVal);
+                payload.send_after = dateObj.toISOString(); 
+            }
+        }
+
+        // --- SEND REQUEST ---
+        statusBox.innerText = 'Sending to OneSignal...';
+        
+        fetch('https://onesignal.com/api/v1/notifications', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8',
+                'Authorization': 'Basic ' + API_KEY
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            if(data.id) {
+                statusBox.innerText = `✅ Success! ID: ${data.id} (Recipients: ${data.recipients})`;
+                statusBox.className = 'success';
+            } else {
+                statusBox.innerText = '❌ Error: ' + JSON.stringify(data.errors);
+                statusBox.className = 'error';
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            statusBox.innerText = '❌ Network Error';
+            statusBox.className = 'error';
+        });
+    }
+</script>
+
+</body>
+</html>
