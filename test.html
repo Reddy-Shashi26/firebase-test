@@ -3,6 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kodular Integration Test</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #e9ecef; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 300px; text-align: center; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #0056b3; }
+        .hidden { display: none; }
+        .status { margin-top: 20px; padding: 10px; background: #f8f9fa; border: 1px dashed #6c757d; font-size: 13px; color: #333; word-break: break-all; }
+        .success { color: green; font-weight: bold; border-color: green; background: #e8f5e9; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="login-view">
+            <h2>System Login</h2>
+            <input type="text" id="username" placeholder="Username (user)">
+            <input type="password" id="password" placeholder="Password (12345678)">
+            <button onclick="attemptLogin()">Log In</button>
+            <p id="login-error" class="error"></p>
+        </div>
+
+        <div id="dashboard-view" class="hidden">
+            <h2>Welcome, User!</h2>
+            <p>Status: <span id="connection-status">Requesting ID from App...</span></p>
+            
+            <div id="data-box" class="status">
+                Waiting for Kodular response...
+            </div>
+            
+            <br>
+            <button onclick="requestMobileID()">Retry Request</button>
+            <br><br>
+            <button onclick="location.reload()" style="background-color: #6c757d;">Logout / Reload</button>
+        </div>
+    </div>
+
+    <script>
+        // ----------------------------------------------------
+        // 1. LOGIN LOGIC
+        // ----------------------------------------------------
+        function attemptLogin() {
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+
+            if (u === "user" && p === "12345678") {
+                // Login Success: Switch screens
+                document.getElementById('login-view').classList.add('hidden');
+                document.getElementById('dashboard-view').classList.remove('hidden');
+                
+                // TRIGGER THE REQUEST TO KODULAR IMMEDIATELY
+                requestMobileID();
+            } else {
+                document.getElementById('login-error').innerText = "Invalid Credentials";
+            }
+        }
+
+        // ----------------------------------------------------
+        // 2. REQUEST FUNCTION (Sends "GET_ID" to Kodular)
+        // ----------------------------------------------------
+        function requestMobileID() {
+            const statusFn = document.getElementById('connection-status');
+            
+            // Check if running inside Kodular App
+            if (window.AppInventor && window.AppInventor.setWebViewString) {
+                statusFn.innerText = "Signal sent to App. Waiting...";
+                
+                // SEND THE SIGNAL
+                window.AppInventor.setWebViewString("GET_ID");
+            } else {
+                statusFn.innerText = "Error: Not in App (or WebString disabled)";
+                document.getElementById('data-box').innerText = "Please open this page inside your Kodular App.";
+            }
+        }
+
+        // ----------------------------------------------------
+        // 3. RECEIVE FUNCTION (Kodular calls this via EvaluateJS)
+        // ----------------------------------------------------
+        // This function must be global so Kodular can find it
+        window.receiveSubscriptionID = function(receivedID) {
+            const box = document.getElementById('data-box');
+            const statusFn = document.getElementById('connection-status');
+
+            if(receivedID) {
+                statusFn.innerText = "Connected & Synced!";
+                statusFn.style.color = "green";
+                
+                box.innerHTML = "<strong>RECEIVED ID:</strong><br>" + receivedID;
+                box.classList.add("success");
+                
+                // (In the real app, this is where you would update Firebase)
+                console.log("Saving ID to database: " + receivedID);
+            } else {
+                box.innerText = "Received empty ID. Check OneSignal setup.";
+            }
+        };
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WebView Connection Test</title>
     <style>
         body { font-family: sans-serif; padding: 20px; text-align: center; }
@@ -58,4 +175,4 @@
     </script>
 
 </body>
-</html>
+</html> -->
